@@ -1,16 +1,15 @@
 # 1ML Online REPL
 
-A web-based version of the 1ML compiler and REPL. Compiled from the [original 1ML implementation by Andreas Rossberg](https://github.com/rossberg/1ml) using js_of_ocaml.
+A web-based version of the 1ML compiler and REPL, built using [Andreas Rossberg’s original 1ML implementation](https://github.com/rossberg/1ml) and compiled to JavaScript with js_of_ocaml.
 
 This web interface provides a simple environment for writing and executing 1ML code:
 
 - Write 1ML code in the editor on the left
-- Click "Run" or press Ctrl+Enter to execute the code
-- See the results in the output panel on the right
-- Use the "Clear" button to clear the output panel
+- Click **"Run"** or press **Ctrl+Enter** to execute.
+- View the results in the output panel on the right.
+- Use **"Clear"** to reset the output
 
-Try it out at: https://gldubc.github.io/1ml_web/
-
+Try it out here: https://gldubc.github.io/1ml_web/
 
 ## To run locally:
 
