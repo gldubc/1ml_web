@@ -16,4 +16,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: web  # Just deploy the web directory directly
-          branch: gh-pages 
+          branch: main
