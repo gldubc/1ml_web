@@ -1,6 +1,8 @@
 # 1ML Online REPL
 
-A web-based version of the 1ML compiler and REPL. This project allows you to write and execute 1ML code directly in your browser.
+A web-based version of the 1ML compiler and REPL. Compiled from the original source using js_of_ocaml.
+
+Try out at: https://gldubc.github.io/1ml_web/
 
 ## Prerequisites
 
