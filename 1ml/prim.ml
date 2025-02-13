@@ -2,6 +2,9 @@
  * (c) 2014 Andreas Rossberg
  *)
 
+(* Print function that can be overridden *)
+let print = ref (fun s -> print_string s; flush_all ())
+
 type typ =
   | BoolT
   | IntT
@@ -99,7 +102,7 @@ let funs =
       fn = fun [x1; x2] -> [BoolV(x1 >= x2)]};
     {name = "Int.print";
       typ = [IntT], [];
-      fn = fun [IntV i] -> print_int i; flush_all (); []};
+      fn = fun [IntV i] -> !print (string_of_int i); []};
 
     {name = "Char.toInt";
       typ = [CharT], [IntT];
@@ -109,7 +112,7 @@ let funs =
       fn = fun [IntV i] -> [CharV(Char.chr i)]};
     {name = "Char.print";
       typ = [CharT], [];
-      fn = fun [CharV c] -> print_char c; flush_all (); []};
+      fn = fun [CharV c] -> !print (String.make 1 c); []};
 
     {name = "Text.++";
       typ = [TextT; TextT], [TextT];
@@ -137,7 +140,7 @@ let funs =
       fn = fun [CharV c] -> [TextV(String.make 1 c)]};
     {name = "Text.print";
       typ = [TextT], [];
-      fn = fun [TextV t] -> print_string t; flush_all (); []};
+      fn = fun [TextV t] -> !print t; []};
   ]
 
 let fun_of_string name =

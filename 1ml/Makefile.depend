@@ -1,0 +1,199 @@
+compile.cmo : \
+    lambda.cmi \
+    fomega.cmi \
+    compile.cmi
+compile.cmx : \
+    lambda.cmx \
+    fomega.cmx \
+    compile.cmi
+compile.cmi : \
+    lambda.cmi \
+    fomega.cmi
+elab.cmo : \
+    types.cmi \
+    trace.cmi \
+    syntax.cmo \
+    sub.cmi \
+    source.cmi \
+    prim.cmi \
+    lib.cmi \
+    iL.cmo \
+    erase.cmi \
+    env.cmi \
+    elab.cmi
+elab.cmx : \
+    types.cmx \
+    trace.cmx \
+    syntax.cmx \
+    sub.cmx \
+    source.cmx \
+    prim.cmx \
+    lib.cmx \
+    iL.cmx \
+    erase.cmx \
+    env.cmx \
+    elab.cmi
+elab.cmi : \
+    types.cmi \
+    syntax.cmo \
+    fomega.cmi \
+    env.cmi
+env.cmo : \
+    types.cmi \
+    fomega.cmi \
+    env.cmi
+env.cmx : \
+    types.cmx \
+    fomega.cmx \
+    env.cmi
+env.cmi : \
+    types.cmi
+erase.cmo : \
+    types.cmi \
+    iL.cmo \
+    env.cmi \
+    erase.cmi
+erase.cmx : \
+    types.cmx \
+    iL.cmx \
+    env.cmx \
+    erase.cmi
+erase.cmi : \
+    types.cmi \
+    fomega.cmi \
+    env.cmi
+fomega.cmo : \
+    prim.cmi \
+    fomega.cmi
+fomega.cmx : \
+    prim.cmx \
+    fomega.cmi
+fomega.cmi : \
+    prim.cmi
+iL.cmo : \
+    types.cmi \
+    fomega.cmi
+iL.cmx : \
+    types.cmx \
+    fomega.cmx
+lambda.cmo : \
+    prim.cmi \
+    lambda.cmi
+lambda.cmx : \
+    prim.cmx \
+    lambda.cmi
+lambda.cmi : \
+    prim.cmi
+lexer.cmo : \
+    source.cmi \
+    parser.cmi \
+    lexer.cmi
+lexer.cmx : \
+    source.cmx \
+    parser.cmx \
+    lexer.cmi
+lexer.cmi : \
+    source.cmi \
+    parser.cmi
+lib.cmo : \
+    lib.cmi
+lib.cmx : \
+    lib.cmi
+lib.cmi :
+main.cmo : \
+    types.cmi \
+    trace.cmi \
+    syntax.cmo \
+    source.cmi \
+    parser.cmi \
+    lexer.cmi \
+    lambda.cmi \
+    fomega.cmi \
+    erase.cmi \
+    env.cmi \
+    elab.cmi \
+    compile.cmi
+main.cmx : \
+    types.cmx \
+    trace.cmx \
+    syntax.cmx \
+    source.cmx \
+    parser.cmx \
+    lexer.cmx \
+    lambda.cmx \
+    fomega.cmx \
+    erase.cmx \
+    env.cmx \
+    elab.cmx \
+    compile.cmx
+parser.cmo : \
+    syntax.cmo \
+    source.cmi \
+    prim.cmi \
+    parser.cmi
+parser.cmx : \
+    syntax.cmx \
+    source.cmx \
+    prim.cmx \
+    parser.cmi
+parser.cmi : \
+    syntax.cmo
+prim.cmo : \
+    prim.cmi
+prim.cmx : \
+    prim.cmi
+prim.cmi :
+source.cmo : \
+    source.cmi
+source.cmx : \
+    source.cmi
+source.cmi :
+sub.cmo : \
+    types.cmi \
+    trace.cmi \
+    source.cmi \
+    lib.cmi \
+    iL.cmo \
+    erase.cmi \
+    env.cmi \
+    sub.cmi
+sub.cmx : \
+    types.cmx \
+    trace.cmx \
+    source.cmx \
+    lib.cmx \
+    iL.cmx \
+    erase.cmx \
+    env.cmx \
+    sub.cmi
+sub.cmi : \
+    types.cmi \
+    source.cmi \
+    fomega.cmi \
+    env.cmi
+syntax.cmo : \
+    source.cmi \
+    prim.cmi \
+    lib.cmi
+syntax.cmx : \
+    source.cmx \
+    prim.cmx \
+    lib.cmx
+trace.cmo : \
+    trace.cmi
+trace.cmx : \
+    trace.cmi
+trace.cmi :
+types.cmo : \
+    prim.cmi \
+    lib.cmi \
+    fomega.cmi \
+    types.cmi
+types.cmx : \
+    prim.cmx \
+    lib.cmx \
+    fomega.cmx \
+    types.cmi
+types.cmi : \
+    prim.cmi \
+    fomega.cmi

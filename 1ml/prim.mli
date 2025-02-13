@@ -2,6 +2,9 @@
  * (c) 2014 Andreas Rossberg
  *)
 
+(* Output *)
+val print : (string -> unit) ref
+
 (* Representation *)
 
 type typ =
