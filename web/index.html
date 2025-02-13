@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1ML Online REPL</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>1ML Online REPL</h1>
+            <div class="toolbar">
+                <button id="run">Run (Ctrl+Enter)</button>
+                <button id="clear">Clear</button>
+                <button id="load_example">Load Stack Example</button>
+                <button id="toggle_help" class="help-button">Show Syntax Help</button>
+            </div>
+        </header>
+        <main>
+            <div class="editor-container">
+                <div id="editor"></div>
+            </div>
+            <div class="output-container">
+                <pre id="output"></pre>
+            </div>
+        </main>
+        <div id="syntax_help" class="syntax-help hidden">
+            <h2>1ML Quick Reference</h2>
+            <div class="syntax-sections">
+                <section>
+                    <h3>Basic Syntax</h3>
+                    <pre>
+(; Comments ;)
+;; Line comments
+                        
+(* Values *)
+x = 42;              // Integer binding
+s = "hello";         // String binding
+b = true;            // Boolean binding
+                        
+(* Functions *)
+f x = x + 1;         // Simple function
+g (x : int) = x + 1; // With type annotation
+h = fun x => x + 1;  // Lambda syntax</pre>
+                </section>
+                <section>
+                    <h3>Types and Modules</h3>
+                    <pre>
+(* Type Definitions *)
+type t = int;
+type pair a b = {fst: a; snd: b};
+                        
+(* Module Types *)
+type STACK = {
+    type t a;
+    empty 'a : t a;
+    push 'a : a -> t a -> t a;
+};
+                        
+(* Module Implementation *)
+Stack :> STACK = {
+    type t a = List.list a;
+    empty = List.nil;
+    push = List.cons;
+};</pre>
+                </section>
+                <section>
+                    <h3>Pattern Matching</h3>
+                    <pre>
+(* Pattern Matching *)
+caseopt opt_val
+    (fun () => /* handle None */)
+    (fun x => /* handle Some x */);
+                        
+caselist lst
+    (fun () => /* handle Nil */)
+    (fun (head, tail) => /* handle Cons */);
+                        
+if condition 
+then expr1 
+else expr2;</pre>
+                </section>
+                <section>
+                    <h3>Common Operations</h3>
+                    <pre>
+(* Printing *)
+do Int.print 42;
+do Text.print "hello";
+                        
+(* List Operations *)
+lst = List.cons 1 (List.cons 2 List.nil);
+len = List.length lst;
+rev = List.rev lst;
+                        
+(* Function Application *)
+result = f (g x);</pre>
+                </section>
+                <section>
+                    <h3>Advanced Features</h3>
+                    <pre>
+(* Optional Values *)
+type OPT = {
+    type opt a;
+    none 'a : opt a;
+    some 'a : a -> opt a;
+};
+
+(* Using Options *)
+maybeValue = some 42;
+result = caseopt maybeValue
+    (fun () => 0)        // handle None case
+    (fun x => x + 1);    // handle Some case
+
+(* Higher-Order Functions *)
+map f lst = foldr lst nil (fun x => cons (f x));
+filter p lst = foldr lst nil 
+    (fun x ys => if p x then cons x ys else ys);
+
+(* Type Abstraction *)
+Set (Elem : ORD) :> SET with (elem = Elem.t) = {
+    type elem = Elem.t;
+    type set = (int, elem -> bool);
+    // ... implementation
+};</pre>
+                </section>
+            </div>
+            <button id="close_help" class="close-button">×</button>
+        </div>
+    </div>
+    <footer class="attribution">
+        <p>Based on <a href="https://people.mpi-sws.org/~rossberg/1ml/" target="_blank">1ML by Andreas Rossberg</a> — a
+            unified approach to ML core and modules.</p>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+    <script src="js/web.js"></script>
+</body>
+
+</html>

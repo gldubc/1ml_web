@@ -1,0 +1,21 @@
+# OCaml
+_build/
+*.cmi
+*.cmo
+*.cmx
+*.o
+*.a
+*.so
+*.cma
+*.cmxa
+_opam
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
