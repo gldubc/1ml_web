@@ -64,7 +64,8 @@ button:hover {
 main {
     display: flex;
     gap: 1rem;
-    height: calc(100vh - 150px);
+    height: calc(100vh - 180px);
+    margin-bottom: 40px;
 }
 
 .editor-container {
@@ -214,6 +215,8 @@ main {
     text-align: center;
     font-size: 0.9rem;
     border-top: 1px solid var(--help-border);
+    height: 40px;
+    z-index: 100;
 }
 
 .attribution a {

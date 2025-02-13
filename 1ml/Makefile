@@ -23,8 +23,17 @@ CMXS = $(MODULES:%=%.cmx)
 IMLS = $(SAMPLES:%=%.1ml)
 TXTS = $(TEXTS:%=%.txt)
 
+WEB_MODULES = $(filter-out main, $(MODULES))
+WEB_CMOS = $(WEB_MODULES:%=%.cmo)
+
+all: $(NAME) web
+
 $(NAME): $(CMXS) Makefile
 	ocamlopt $(CMXS) -o $@
+
+web: $(CMOS) ../docs/web.ml Makefile
+	ocamlfind ocamlc -package js_of_ocaml -package js_of_ocaml-ppx $(WEB_CMOS) -linkpkg -o ../docs/web.byte ../docs/web.ml
+	cd ../docs && js_of_ocaml web.byte -o js/web.js && rm web.byte
 
 unopt: $(CMOS) Makefile
 	ocamlc $(CMOS) -g -o $(NAME)
@@ -48,6 +57,7 @@ clean:
 	rm -f *.cmi *.cmo *.cmx *.o *.output *.depend
 	rm -f *.native *.byte $(NAME) $(NAME).opt $(NAME).zip
 	rm -f *~
+	rm -f ../docs/web.byte ../docs/js/web.js
 
 %.cmi: %.mli
 	ocamlc -c $<
