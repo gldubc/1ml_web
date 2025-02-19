@@ -5,11 +5,13 @@ class type editor = object
   method setValue : Js.js_string Js.t -> unit Js.meth
   method getSession : < setMode : Js.js_string Js.t -> unit Js.meth > Js.t Js.meth
   method setTheme : Js.js_string Js.t -> unit Js.meth
+  method resize : unit -> unit Js.meth
 end
 
 let document = Dom_html.document
 let editor_div = Js.Opt.get (document##getElementById(Js.string "editor")) (fun () -> assert false)
 let output_div = Js.Opt.get (document##getElementById(Js.string "output")) (fun () -> assert false)
+let systemf_editor_div = Js.Opt.get (document##getElementById(Js.string "systemf_editor")) (fun () -> assert false)
 let run_button = Js.Opt.get (document##getElementById(Js.string "run")) (fun () -> assert false)
 let clear_button = Js.Opt.get (document##getElementById(Js.string "clear")) (fun () -> assert false)
 let load_example_button = Js.Opt.get (document##getElementById(Js.string "load_example")) (fun () -> assert false)
@@ -17,10 +19,55 @@ let load_stacknew_example_button = Js.Opt.get (document##getElementById(Js.strin
 let toggle_help_button = Js.Opt.get (document##getElementById(Js.string "toggle_help")) (fun () -> assert false)
 let close_help_button = Js.Opt.get (document##getElementById(Js.string "close_help")) (fun () -> assert false)
 let syntax_help_div = Js.Opt.get (document##getElementById(Js.string "syntax_help")) (fun () -> assert false)
+let load_prelude_checkbox = Js.Opt.get (document##getElementById(Js.string "load_prelude")) (fun () -> assert false)
+let load_prelude_checkbox = (Js.Unsafe.coerce load_prelude_checkbox : < checked : bool Js.t Js.prop > Js.t)
 
 let editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(editor_div)) : editor Js.t)
+let systemf_editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(systemf_editor_div)) : editor Js.t)
 let () = editor##setTheme(Js.string "ace/theme/monokai")
 let () = (editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+let () = systemf_editor##setTheme(Js.string "ace/theme/monokai")
+let () = (systemf_editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+
+(* Get tab elements *)
+let tab_buttons = document##getElementsByClassName(Js.string "tab-button")
+let tab_panes = document##getElementsByClassName(Js.string "tab-pane")
+
+(* Tab switching function *)
+let switch_tab button =
+  let target_id = Js.to_string (Js.Unsafe.get button "dataset")##.tab in
+  
+  (* Update button states *)
+  for i = 0 to tab_buttons##.length - 1 do
+    let btn = Js.Opt.get (tab_buttons##item(i)) (fun () -> assert false) in
+    if btn == button then
+      btn##.classList##add(Js.string "active")
+    else
+      btn##.classList##remove(Js.string "active")
+  done;
+  
+  (* Update tab pane states *)
+  for i = 0 to tab_panes##.length - 1 do
+    let pane = Js.Opt.get (tab_panes##item(i)) (fun () -> assert false) in
+    if Js.to_string pane##.id = target_id then
+      pane##.classList##add(Js.string "active")
+    else
+      pane##.classList##remove(Js.string "active")
+  done;
+  
+  (* Refresh the systemf editor if it's being shown *)
+  if target_id = "systemf-term" then
+    ignore (systemf_editor##resize())
+
+(* Add click handlers to tab buttons *)
+let () =
+  for i = 0 to tab_buttons##.length - 1 do
+    let button = Js.Opt.get (tab_buttons##item(i)) (fun () -> assert false) in
+    button##.onclick := Dom_html.handler (fun _ ->
+      switch_tab button;
+      Js._false
+    )
+  done
 
 let append_output str =
   let current = output_div##.innerHTML in
@@ -144,6 +191,22 @@ let run_code ?(is_prelude=false) code =
     let sign, _, fprog = Elab.elab !env prog in
     let lambda = Compile.compile (Erase.erase_env !env) fprog in
     let value = Lambda.eval !state lambda in
+    
+    (* Display System F term and type *)
+    let buffer = Buffer.create 256 in
+    let fmt = Format.formatter_of_buffer buffer in
+    Format.fprintf fmt "@[<v 0>";
+    Format.fprintf fmt "Term:@.";
+    Fomega.pp_exp fmt fprog;
+    Format.fprintf fmt "@.@.Type:@.";
+    Types.pp_of_norm_extyp fmt sign;
+    Format.fprintf fmt "@]@.";
+    Format.pp_print_flush fmt ();
+    systemf_editor##setValue(Js.string (Buffer.contents buffer));
+    
+    (* Make System F editor read-only *)
+    let () = Js.Unsafe.set (Js.Unsafe.get systemf_editor "setReadOnly") systemf_editor [|Js.Unsafe.inject (Js.bool true)|] in
+    
     (* Update environment for next evaluation *)
     let Types.ExT(aks, Types.StrT(tr)) = sign in
     env := Env.add_row tr (Env.add_typs aks !env);
@@ -157,9 +220,7 @@ let run_code ?(is_prelude=false) code =
   | e ->
     append_output ("Error: " ^ Printexc.to_string e)
 
-(* Load prelude on initialization *)
-let () =
-  let prelude_source = {|;; Fun
+let prelude_source = {|;; Fun
 
 Fun =
 {
@@ -409,11 +470,24 @@ Map (Key : ORD) :> MAP with (key = Key.t) =
   add x y m z = if x == z then some y else m x;
 };
 
-|} in
-  run_code ~is_prelude:true prelude_source
+|}
+
+(* Load prelude on initialization if checkbox is checked *)
+let () =
+  if (Js.to_bool (load_prelude_checkbox##.checked)) then
+    run_code ~is_prelude:true prelude_source
 
 let () =
   run_button##.onclick := Dom_html.handler (fun _ ->
+    let should_load_prelude = Js.to_bool (load_prelude_checkbox##.checked) in
+    if should_load_prelude then (
+      env := Env.empty;
+      state := Lambda.Env.empty;
+      run_code ~is_prelude:true prelude_source;
+    ) else (
+      env := Env.empty;
+      state := Lambda.Env.empty;
+    );
     run_code (Js.to_string (editor##getValue()));
     Js._false
   );

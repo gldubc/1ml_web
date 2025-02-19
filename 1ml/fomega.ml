@@ -244,8 +244,8 @@ let rec norm_exp = function
     | _ -> raise (Error "DotE")
     )
   | GenE(a, k, e) -> GenE(a, k, e)
-  | InstE(e1, t) ->
-    (match norm_exp e1 with
+  | InstE(e, t) ->
+    (match norm_exp e with
     | GenE(a, k, e) -> norm_exp (subst_typ_exp [a, t] e)
     | _ -> raise (Error "InstE")
     )
@@ -437,7 +437,7 @@ let rec string_of_typ = function
   | VarT(a) -> a
   | PrimT(t) -> Prim.string_of_typ t
   | ArrT(t1, t2) -> "(" ^ string_of_typ t1 ^ " -> " ^ string_of_typ t2 ^ ")"
-  | ProdT[] -> "1"
+  | ProdT[] -> "{}"
   | ProdT(tr) -> "{" ^ string_of_row " : " string_of_typ tr ^ "}"
   | AllT(a, k, t) ->
     "(" ^ "!" ^ a ^ ":" ^ string_of_kind k ^ ". " ^ string_of_typ t ^ ")"
@@ -490,6 +490,114 @@ let rec string_of_exp = function
     ")"
   | LetE(e1, x, e2) ->
     "(let " ^ x ^ " = " ^ string_of_exp e1 ^ " in " ^ string_of_exp e2 ^ ")"
+
+let _ = string_of_typ_fwd := string_of_typ
+let _ = string_of_kind_fwd := string_of_kind
+
+(* Compact pretty printing *)
+let rec pp_kind fmt = function
+  | BaseK -> Format.pp_print_string fmt "★"
+  | ArrK(k1, k2) -> Format.fprintf fmt "@[<hov 2>%a →@ %a@]" pp_kind k1 pp_kind k2
+  | ProdK kr -> 
+      Format.fprintf fmt "@[<hv 1>{%a}@]" 
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@ ")
+          (fun fmt (l,k) -> Format.fprintf fmt "%s : %a" l pp_kind k)) kr
+
+let rec pp_typ_prec prec fmt = function
+  | VarT(a) -> Format.pp_print_string fmt a
+  | PrimT(t) -> Format.pp_print_string fmt (Prim.string_of_typ t)
+  | ArrT(t1, t2) ->
+      Format.fprintf fmt "@[<hov 2>%a →@ %a@]" 
+        (pp_typ_prec (prec + 1)) t1 (pp_typ_prec prec) t2
+  | ProdT tr ->
+      if tr = [] then Format.pp_print_string fmt "{}"
+      else Format.fprintf fmt "@[<v 1>{@,%a@,}@]"
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@,")
+          (fun fmt (l,t) -> Format.fprintf fmt "@[<h>%s :@ %a@]" l (pp_typ_prec 0) t)) tr
+  | AllT(a, k, t) ->
+      Format.fprintf fmt "@[<hv 2>∀%s:%a.@,%a@]" a pp_kind k (pp_typ_prec 0) t
+  | AnyT(a, k, t) ->
+      Format.fprintf fmt "@[<hv 2>∃%s:%a.@,%a@]" a pp_kind k (pp_typ_prec 0) t
+  | LamT(a, k, t) ->
+      Format.fprintf fmt "@[<hv 2>λ%s:%a.@,%a@]" a pp_kind k (pp_typ_prec 0) t
+  | AppT(t1, t2) ->
+      if prec > 1 then
+        Format.fprintf fmt "@[<hov 2>(%a@ %a)@]" (pp_typ_prec 1) t1 (pp_typ_prec 2) t2
+      else
+        Format.fprintf fmt "@[<hov 2>%a@ %a@]" (pp_typ_prec 1) t1 (pp_typ_prec 2) t2
+  | TupT tr ->
+      if tr = [] then Format.pp_print_string fmt "{}"
+      else Format.fprintf fmt "@[<v 1>{@,%a@,}@]"
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@,")
+          (fun fmt (l,t) -> Format.fprintf fmt "@[<h>%s =@ %a@]" l (pp_typ_prec 0) t)) tr
+  | DotT(t, l) -> Format.fprintf fmt "@[%a.%s@]" (pp_typ_prec 3) t l
+  | RecT(a, k, t) ->
+      Format.fprintf fmt "@[<hv 2>μ%s:%a.@,%a@]" a pp_kind k (pp_typ_prec 0) t
+  | InferT(t', id) ->
+      if Lazy.is_val t' then pp_typ_prec prec fmt (Lazy.force t')
+      else Format.fprintf fmt "'%d" id
+
+let pp_typ fmt t = pp_typ_prec 0 fmt t
+
+let rec pp_exp_prec prec fmt e =
+  match e with
+  | VarE(x) -> Format.pp_print_string fmt x
+  | PrimE(c) -> Format.pp_print_string fmt (Prim.string_of_const c)
+  | IfE(e1, e2, e3) ->
+      Format.fprintf fmt "@[<v 0>if %a@,then %a@,else %a@]" 
+        pp_exp e1 pp_exp e2 pp_exp e3
+  | LamE(x, t, e) ->
+      let annot = if !verbose_typ_flag then Format.asprintf ":%a" pp_typ t else "" in
+      Format.fprintf fmt "@[<hv 2>λ%s%s.@,%a@]" x annot pp_exp e
+  | AppE(e1, e2) ->
+      if prec > 1 then
+        Format.fprintf fmt "@[<hov 2>(%a@ %a)@]" (pp_exp_prec 1) e1 (pp_exp_prec 2) e2
+      else
+        Format.fprintf fmt "@[<hov 2>%a@ %a@]" (pp_exp_prec 1) e1 (pp_exp_prec 2) e2
+  | TupE(er) ->
+      if er = [] then
+        if prec = 0 then Format.pp_print_string fmt "{}"
+        else Format.pp_print_string fmt ""
+      else Format.fprintf fmt "@[<v 1>{@,%a@,}@]"
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@,")
+          (fun fmt (l,e) -> Format.fprintf fmt "@[<h>%s =@ %a@]" l pp_exp e)) er
+  | DotE(e, l) -> Format.fprintf fmt "@[%a.%s@]" (pp_exp_prec 3) e l
+  | GenE(a, k, e) ->
+      Format.fprintf fmt "@[<hv 2>Λ%s:%a.@,%a@]" a pp_kind k pp_exp e
+  | InstE(e, t) -> 
+      if prec > 1 then
+        Format.fprintf fmt "@[<hov 2>(%a@ [%a])@]" (pp_exp_prec 1) e pp_typ t
+      else
+        Format.fprintf fmt "@[<hov 2>%a@ [%a]@]" (pp_exp_prec 1) e pp_typ t
+  | PackE(t1, e, t2) ->
+      let annot = if !verbose_typ_flag then Format.asprintf ":%a" pp_typ t2 else "" in
+      Format.fprintf fmt "@[<hv 2>pack(%a,@,%a)%s@]" pp_typ t1 pp_exp e annot
+  | OpenE(e1, a, x, e2) ->
+      Format.fprintf fmt "@[<v 0>unpack (%s,%s) =@,%a in@,%a@]" a x pp_exp e1 pp_exp e2
+  | RollE(e, t) ->
+      let annot = if !verbose_typ_flag then Format.asprintf ":%a" pp_typ t else "" in
+      Format.fprintf fmt "@[<hv 2>roll(%a)%s@]" pp_exp e annot
+  | UnrollE(e) -> Format.fprintf fmt "@[<hv 2>unroll(%a)@]" pp_exp e
+  | RecE(x, t, e) ->
+      let annot = if !verbose_typ_flag then Format.asprintf ":%a" pp_typ t else "" in
+      Format.fprintf fmt "@[<hv 2>rec %s%s.@,%a@]" x annot pp_exp e
+  | LetE(e1, x, e2) ->
+      Format.fprintf fmt "@[<v 0>let %s =@,%a in@,%a@]" x pp_exp e1 pp_exp e2
+
+and pp_exp fmt e = pp_exp_prec 0 fmt e
+
+let pp_of_exp e = 
+  Format.printf "@[<v 0>%a@]@." pp_exp e
+
+(* Update the existing string_of functions to use pretty printer *)
+let string_of_typ t =
+  Format.asprintf "%a" pp_typ t
+  
+let string_of_kind k =
+  Format.asprintf "%a" pp_kind k
+
+let string_of_exp e =
+  Format.asprintf "%a" pp_exp e
 
 let _ = string_of_typ_fwd := string_of_typ
 let _ = string_of_kind_fwd := string_of_kind

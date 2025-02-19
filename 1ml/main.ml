@@ -78,9 +78,9 @@ let process file source =
         let result = Fomega.norm_exp closed_prog in
         trace_phase "Result:";
         if !result_flag then begin
-          print_string (Fomega.string_of_exp result);
+          Fomega.pp_of_exp result; 
           print_string " : ";
-          print_endline (Types.string_of_norm_extyp sign)
+          Format.printf "@[<v 0>%a@]@." (fun fmt s -> Types.pp_of_norm_extyp fmt s) sign;
         end else begin
           print_sig sign
         end;
@@ -100,10 +100,13 @@ let process file source =
         let value = Lambda.eval !state lambda in
         trace_phase "Result:";
         if !result_flag then begin
-          print_string (Lambda.string_of_value value);
-          print_string " : ";
-          print_endline (Types.string_of_norm_extyp sign)
+         (* print_string (Lambda.string_of_value value); *)
+         (* print_string " : "; *)
+         (* print_endline (Types.string_of_norm_extyp sign) *)
         end else begin
+          Types.verbosest_on ();
+          print_endline "Signature:";
+          Format.printf "@[<v 0>%a@]@." (fun fmt s -> Types.pp_of_norm_extyp fmt s) sign;
           print_sig sign
         end;
         let ls = match sign with

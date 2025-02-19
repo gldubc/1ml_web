@@ -194,3 +194,7 @@ val print_kind : kind -> unit
 val print_typ : typ -> unit
 val print_extyp : extyp -> unit
 val print_row : typ row -> unit
+
+(* Pretty printing with unicode symbols *)
+val pp_of_norm_typ : Format.formatter -> typ -> unit
+val pp_of_norm_extyp : Format.formatter -> extyp -> unit

@@ -620,12 +620,15 @@ let rec string_of_typ' prec = function
       string_of_binder "\\" aks ^
       string_of_typ' binder_prec t
     )
-  | AppT(t, ts) ->
+  | AppT(t, []) ->
+    string_of_typ' prec t
+  | AppT(t, [t1]) ->
     paren app_prec prec (
       string_of_typ' app_prec t ^
-      String.concat ""
-        (List.map (fun t' -> "(" ^ string_of_typ' base_prec t' ^ ")") ts)
+      "(" ^ string_of_typ' base_prec t1 ^ ")"
     )
+  | AppT(t, t1::ts) ->
+    string_of_typ' prec (AppT(AppT(t, [t1]), ts))
   | TupT(tr) -> "{" ^ string_of_row' " = " string_of_typ' base_prec tr ^ "}"
   | DotT(t, l) ->
     if !verbose_paths_flag then
@@ -865,3 +868,90 @@ let print_extyp s =
   print_extyp' base_prec [["prog"]] (norm_extyp s); print_flush ()
 let print_row tr =
   print_row' ":" print_typ' base_prec [["prog"]] (norm_row tr); print_flush ()
+
+(* Pretty printing with unicode symbols *)
+let rec pp_of_norm_typ' prec fmt = function
+  | VarT(a, k) ->
+    if k <> BaseK && !verbose_vars_flag then
+      Format.fprintf fmt "@[<hov 2>%s :@ %a@]" a pp_of_norm_kind k
+    else
+      Format.pp_print_string fmt a
+  | PrimT(t) -> Format.pp_print_string fmt (Prim.string_of_typ t)
+  | StrT(tr) ->
+    (match as_tup_row tr with
+    | Some ts ->
+      Format.fprintf fmt "@[<hov 2>(%a)@]"
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ",@ ")
+          (pp_of_norm_typ' base_prec)) ts
+    | None ->
+      Format.fprintf fmt "@[<v 2>{%a}@]"
+        (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@ ")
+          (fun fmt (l, t) -> Format.fprintf fmt "@[<hov 2>%s :@ %a@]" l (pp_of_norm_typ' base_prec) t)) tr)
+  | FunT(aks, t, s, f) ->
+    let arrow = match f with
+      | Explicit Impure -> "⟶"  (* Unicode heavy arrow *)
+      | Explicit Pure -> "⇒"    (* Unicode double arrow *)
+      | Implicit -> "⟹"         (* Unicode double heavy arrow *)
+    in
+    Format.fprintf fmt "@[<hov 2>%s%a@ %s@ %a@]"
+      (if aks = [] then "" else "∀" ^ String.concat " " (List.map fst aks) ^ ".@ ")
+      (pp_of_norm_typ' (binder_prec + 1)) t
+      arrow
+      (pp_of_norm_extyp' binder_prec) s
+  | TypT(s) -> Format.fprintf fmt "@[<hov 2>[=@ %a]@]" (pp_of_norm_extyp' base_prec) s
+  | WrapT(s) -> Format.fprintf fmt "@[<hov 2>[%a]@]" (pp_of_norm_extyp' base_prec) s
+  | LamT(aks, t) ->
+    Format.fprintf fmt "@[<hov 2>λ%s.@ %a@]"
+      (String.concat " " (List.map fst aks))
+      (pp_of_norm_typ' binder_prec) t
+  | AppT(t, []) ->
+    pp_of_norm_typ' prec fmt t
+  | AppT(t, [t1]) ->
+    Format.fprintf fmt "@[<hov 2>%a@ (%a)@]"
+      (pp_of_norm_typ' app_prec) t
+      (pp_of_norm_typ' base_prec) t1
+  | AppT(t, t1::ts) ->
+    pp_of_norm_typ' prec fmt (AppT(AppT(t, [t1]), ts))
+  | TupT(tr) ->
+    Format.fprintf fmt "@[<v 2>{%a}@]"
+      (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@ ")
+        (fun fmt (l, t) -> Format.fprintf fmt "@[<hov 2>%s =@ %a@]" l (pp_of_norm_typ' base_prec) t)) tr
+  | DotT(t, l) ->
+    if !verbose_paths_flag then
+      Format.fprintf fmt "@[<hov 2>%a.%s@]" (pp_of_norm_typ' dot_prec) t l
+    else
+      Format.pp_print_string fmt l
+  | RecT(ak, t) ->
+    Format.fprintf fmt "@[<hov 2>μ%s.@ %a@]"
+      (fst ak)
+      (pp_of_norm_typ' binder_prec) t
+  | InferT(z) ->
+    match !z with
+    | Det t -> pp_of_norm_typ' prec fmt t
+    | Undet u ->
+      Format.fprintf fmt "'%d%s"
+        u.id
+        (if not !verbose_levels_flag then "" else
+          "@" ^ string_of_int u.level ^
+          "{" ^ String.concat "," (VarSet.elements u.vars) ^ "}")
+
+and pp_of_norm_extyp' prec fmt = function
+  | ExT(aks, t) ->
+    Format.fprintf fmt "@[<hov 2>∃%s.@ %a@]"
+      (String.concat " " (List.map fst aks))
+      (pp_of_norm_typ' binder_prec) t
+
+and pp_of_norm_kind fmt = function
+  | BaseK -> Format.pp_print_string fmt "★"
+  | ProdK(kr) ->
+    Format.fprintf fmt "@[<v 2>{%a}@]"
+      (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ";@ ")
+        (fun fmt (l, k) -> Format.fprintf fmt "@[<hov 2>%s :@ %a@]" l pp_of_norm_kind k)) kr
+  | FunK(ks, k) ->
+    Format.fprintf fmt "@[<hov 2>%a@ ⟶@ %a@]"
+      (Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt "@ ⟶@ ")
+        pp_of_norm_kind) ks
+      pp_of_norm_kind k
+
+let pp_of_norm_typ fmt t = pp_of_norm_typ' base_prec fmt (norm_typ t)
+let pp_of_norm_extyp fmt s = pp_of_norm_extyp' base_prec fmt (norm_extyp s)

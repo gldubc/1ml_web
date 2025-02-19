@@ -111,3 +111,6 @@ val verbose_typ_flag : bool ref
 val string_of_kind : kind -> string
 val string_of_typ : typ -> string
 val string_of_exp : exp -> string
+
+val pp_of_exp : exp -> unit
+val pp_exp : Format.formatter -> exp -> unit
