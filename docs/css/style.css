@@ -66,6 +66,27 @@ button:hover {
     margin-left: auto;
 }
 
+.mode-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 1rem;
+    color: var(--primary-color);
+}
+
+.mode-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.mode-selector input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
 .prelude-toggle {
     display: flex;
     align-items: center;
@@ -162,7 +183,7 @@ main {
     padding: 1rem;
 }
 
-#systemf_editor {
+#systemf_editor, #1ml_editor {
     position: absolute;
     top: 0;
     left: 0;

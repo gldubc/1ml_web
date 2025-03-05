@@ -31,8 +31,9 @@ all: $(NAME) web
 $(NAME): $(CMXS) Makefile
 	ocamlopt $(CMXS) -o $@
 
-web: $(CMOS) ../docs/web.ml Makefile
-	ocamlfind ocamlc -package js_of_ocaml -package js_of_ocaml-ppx $(WEB_CMOS) -linkpkg -o ../docs/web.byte ../docs/web.ml
+web: $(CMOS) Makefile
+	# Build the web interface
+	cd ../docs && ocamlfind ocamlc -package js_of_ocaml -package js_of_ocaml-ppx -I ..//1ml $(WEB_CMOS:%=../1ml/%) -linkpkg -o web.byte web.ml
 	cd ../docs && js_of_ocaml web.byte -o js/web.js && rm web.byte
 
 unopt: $(CMOS) Makefile

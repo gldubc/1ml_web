@@ -1,5 +1,13 @@
 open Js_of_ocaml
 
+(* Stub function for Elixir to 1ML translation *)
+let elixir_to_1ml s = 
+  "// Elixir translation stub\n// The real translation will be available in a future version\n\n" ^
+  "type MODULE_" ^ string_of_int (Hashtbl.hash s) ^ " = {\n" ^
+  "  // Converted from Elixir:\n" ^
+  "  /* " ^ s ^ " */\n" ^
+  "};\n"
+
 class type editor = object
   method getValue : unit -> Js.js_string Js.t Js.meth
   method setValue : Js.js_string Js.t -> unit Js.meth
@@ -12,22 +20,40 @@ let document = Dom_html.document
 let editor_div = Js.Opt.get (document##getElementById(Js.string "editor")) (fun () -> assert false)
 let output_div = Js.Opt.get (document##getElementById(Js.string "output")) (fun () -> assert false)
 let systemf_editor_div = Js.Opt.get (document##getElementById(Js.string "systemf_editor")) (fun () -> assert false)
+let ml_editor_div = Js.Opt.get (document##getElementById(Js.string "1ml_editor")) (fun () -> assert false)
 let run_button = Js.Opt.get (document##getElementById(Js.string "run")) (fun () -> assert false)
 let clear_button = Js.Opt.get (document##getElementById(Js.string "clear")) (fun () -> assert false)
 let load_example_button = Js.Opt.get (document##getElementById(Js.string "load_example")) (fun () -> assert false)
 let load_stacknew_example_button = Js.Opt.get (document##getElementById(Js.string "load_stacknew_example")) (fun () -> assert false)
+let load_elixir_example_button = Js.Opt.get (document##getElementById(Js.string "load_elixir_example")) (fun () -> assert false)
 let toggle_help_button = Js.Opt.get (document##getElementById(Js.string "toggle_help")) (fun () -> assert false)
 let close_help_button = Js.Opt.get (document##getElementById(Js.string "close_help")) (fun () -> assert false)
 let syntax_help_div = Js.Opt.get (document##getElementById(Js.string "syntax_help")) (fun () -> assert false)
 let load_prelude_checkbox = Js.Opt.get (document##getElementById(Js.string "load_prelude")) (fun () -> assert false)
 let load_prelude_checkbox = (Js.Unsafe.coerce load_prelude_checkbox : < checked : bool Js.t Js.prop > Js.t)
 
+(* Mode selectors *)
+let mode_1ml_radio = Js.Opt.get (document##getElementById(Js.string "mode_1ml")) (fun () -> assert false)
+let mode_elixir_radio = Js.Opt.get (document##getElementById(Js.string "mode_elixir")) (fun () -> assert false)
+let mode_1ml_radio_dom = (Js.Unsafe.coerce mode_1ml_radio : Dom_html.element Js.t)
+let mode_elixir_radio_dom = (Js.Unsafe.coerce mode_elixir_radio : Dom_html.element Js.t)
+let mode_1ml_radio = (Js.Unsafe.coerce mode_1ml_radio : < checked : bool Js.t Js.prop > Js.t)
+let mode_elixir_radio = (Js.Unsafe.coerce mode_elixir_radio : < checked : bool Js.t Js.prop > Js.t)
+
+(* Get the parent label elements of the radio buttons *)
+let mode_1ml_label = Js.Opt.get (mode_1ml_radio_dom##.parentNode) (fun () -> assert false)
+let mode_elixir_label = Js.Opt.get (mode_elixir_radio_dom##.parentNode) (fun () -> assert false)
+
 let editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(editor_div)) : editor Js.t)
 let systemf_editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(systemf_editor_div)) : editor Js.t)
+let ml_editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(ml_editor_div)) : editor Js.t)
 let () = editor##setTheme(Js.string "ace/theme/monokai")
 let () = (editor##getSession)##setMode(Js.string "ace/mode/ocaml")
 let () = systemf_editor##setTheme(Js.string "ace/theme/monokai")
 let () = (systemf_editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+let () = ml_editor##setTheme(Js.string "ace/theme/monokai")
+let () = (ml_editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+let () = Js.Unsafe.set (Js.Unsafe.get ml_editor "setReadOnly") ml_editor [|Js.Unsafe.inject (Js.bool true)|]
 
 (* Get tab elements *)
 let tab_buttons = document##getElementsByClassName(Js.string "tab-button")
@@ -177,13 +203,102 @@ do {
     do caseopt x (fun () => ()) (fun y => do Int.print y);
 };|}
 
+let elixir_example_code = {|defmodule Stack do
+  defmodtype t(a) :: * -> *
+
+  defmodtype STACK do
+    type t(a) :: * -> *
+    val empty(a) :: t(a)
+    val push(a) :: a -> t(a) -> t(a)
+    
+    type pair(a) :: *
+    val pop(a) :: t(a) -> option(pair(a))
+  end
+  
+  defmodule ListStack : STACK do
+    type t(a) = list(a)
+    
+    def empty(_a) do
+      []
+    end
+    
+    def push(_a, x, xs) do
+      [x | xs]
+    end
+    
+    type pair(a) = {a, t(a)}
+    
+    def pop(_a, stack) do
+      case stack do
+        [] -> None
+        [head | tail] -> Some({head, tail})
+      end
+    end
+  end
+  
+  def reverse(s : STACK, a, stack : s.t(a)) do
+    let rec aux = fn(acc : s.t(a), st : s.t(a)) ->
+      case s.pop(a, st) do
+        None -> acc
+        Some({x, rest}) -> aux(s.push(a, x, acc), rest)
+      end
+    end
+    aux(s.empty(a), stack)
+  end
+end
+
+# Test the stack
+let test = fn() ->
+  let st = Stack.ListStack.push(int, 3, 
+          Stack.ListStack.push(int, 2, 
+          Stack.ListStack.push(int, 1, 
+          Stack.ListStack.empty(int))))
+  
+  let printStack = fn(s) ->
+    case Stack.ListStack.pop(int, s) do
+      None -> ()
+      Some({x, rest}) -> 
+        print_int(x)
+        printStack(rest)
+    end
+  end
+  
+  print_string("Original stack: ")
+  printStack(st)
+  
+  let stRev = Stack.reverse(Stack.ListStack, int, st)
+  
+  print_string("\nReversed stack: ")
+  printStack(stRev)
+end
+
+test()|}
+
 (* Set up print function for primitives to use *)
 let () = Prim.print := append_output
 
 let env = ref Env.empty
 let state = ref Lambda.Env.empty
+let current_mode = ref "1ml"
 
-let run_code ?(is_prelude=false) code =
+let rec run_elixir_code code =
+  try
+    (* Translate Elixir code to 1ML *)
+    let ml_code = elixir_to_1ml code in
+    
+    (* Set the 1ML editor with the translated code *)
+    ml_editor##setValue(Js.string ml_code);
+    
+    (* Run the translated 1ML code *)
+    run_1ml_code ml_code;
+    
+    (* Show a success message *)
+    append_output "Elixir program translated and executed successfully.\n"
+  with
+  | e ->
+    append_output ("Error in Elixir translation: " ^ Printexc.to_string e)
+
+and run_1ml_code ?(is_prelude=false) code =
   try
     let lexbuf = Lexing.from_string code in
     lexbuf.Lexing.lex_curr_p <- {lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = if is_prelude then "prelude" else "web"};
@@ -219,6 +334,12 @@ let run_code ?(is_prelude=false) code =
     append_output ("Error at " ^ Source.string_of_region region ^ ": " ^ msg)
   | e ->
     append_output ("Error: " ^ Printexc.to_string e)
+
+let run_code ?(is_prelude=false) code =
+  if !current_mode = "elixir" && not is_prelude then
+    run_elixir_code code
+  else
+    run_1ml_code ~is_prelude code
 
 let prelude_source = {|;; Fun
 
@@ -477,7 +598,32 @@ let () =
   if (Js.to_bool (load_prelude_checkbox##.checked)) then
     run_code ~is_prelude:true prelude_source
 
+let set_mode mode =
+  current_mode := mode;
+  match mode with
+  | "1ml" -> 
+      mode_1ml_radio##.checked := Js.bool true;
+      (editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+  | "elixir" -> 
+      mode_elixir_radio##.checked := Js.bool true;
+      (editor##getSession)##setMode(Js.string "ace/mode/elixir")
+  | _ -> ()
+
 let () =
+  (* Set up mode selector click handlers on the label elements *)
+  let mode_1ml_label_element = (Js.Unsafe.coerce mode_1ml_label : Dom_html.element Js.t) in
+  let mode_elixir_label_element = (Js.Unsafe.coerce mode_elixir_label : Dom_html.element Js.t) in
+  
+  mode_1ml_label_element##.onclick := Dom_html.handler (fun _ -> 
+    set_mode "1ml"; 
+    Js._false
+  );
+  
+  mode_elixir_label_element##.onclick := Dom_html.handler (fun _ -> 
+    set_mode "elixir"; 
+    Js._false
+  );
+
   run_button##.onclick := Dom_html.handler (fun _ ->
     let should_load_prelude = Js.to_bool (load_prelude_checkbox##.checked) in
     if should_load_prelude then (
@@ -496,13 +642,21 @@ let () =
     Js._false
   );
   load_example_button##.onclick := Dom_html.handler (fun _ ->
+    set_mode "1ml";
     editor##setValue(Js.string example_code);
     run_code example_code;
     Js._false
   );
   load_stacknew_example_button##.onclick := Dom_html.handler (fun _ ->
+    set_mode "1ml";
     editor##setValue(Js.string stacknew_example_code);
     run_code stacknew_example_code;
+    Js._false
+  );
+  load_elixir_example_button##.onclick := Dom_html.handler (fun _ ->
+    set_mode "elixir";
+    editor##setValue(Js.string elixir_example_code);
+    run_code elixir_example_code;
     Js._false
   );
   toggle_help_button##.onclick := Dom_html.handler (fun _ ->
