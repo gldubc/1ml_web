@@ -1,4 +1,5 @@
 open Js_of_ocaml
+module P = Proto_lib
 
 class type editor = object
   method getValue : unit -> Js.js_string Js.t Js.meth
@@ -6,9 +7,11 @@ class type editor = object
   method getSession : < setMode : Js.js_string Js.t -> unit Js.meth > Js.t Js.meth
   method setTheme : Js.js_string Js.t -> unit Js.meth
   method resize : unit -> unit Js.meth
+  method setReadOnly : bool Js.t -> unit Js.meth
 end
 
 let document = Dom_html.document
+let elixir_editor_div = Js.Opt.get (document##getElementById(Js.string "elixir_editor")) (fun () -> assert false)
 let editor_div = Js.Opt.get (document##getElementById(Js.string "editor")) (fun () -> assert false)
 let output_div = Js.Opt.get (document##getElementById(Js.string "output")) (fun () -> assert false)
 let systemf_editor_div = Js.Opt.get (document##getElementById(Js.string "systemf_editor")) (fun () -> assert false)
@@ -16,16 +19,24 @@ let run_button = Js.Opt.get (document##getElementById(Js.string "run")) (fun () 
 let clear_button = Js.Opt.get (document##getElementById(Js.string "clear")) (fun () -> assert false)
 let load_example_button = Js.Opt.get (document##getElementById(Js.string "load_example")) (fun () -> assert false)
 let load_stacknew_example_button = Js.Opt.get (document##getElementById(Js.string "load_stacknew_example")) (fun () -> assert false)
+let load_elixir_example_button = Js.Opt.get (document##getElementById(Js.string "load_elixir_example")) (fun () -> assert false)
+let edit_ml_button = Js.Opt.get (document##getElementById(Js.string "edit_ml")) (fun () -> assert false)
 let toggle_help_button = Js.Opt.get (document##getElementById(Js.string "toggle_help")) (fun () -> assert false)
 let close_help_button = Js.Opt.get (document##getElementById(Js.string "close_help")) (fun () -> assert false)
 let syntax_help_div = Js.Opt.get (document##getElementById(Js.string "syntax_help")) (fun () -> assert false)
 let load_prelude_checkbox = Js.Opt.get (document##getElementById(Js.string "load_prelude")) (fun () -> assert false)
 let load_prelude_checkbox = (Js.Unsafe.coerce load_prelude_checkbox : < checked : bool Js.t Js.prop > Js.t)
 
-(* Initialize only the main editor with Ace *)
-let editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(editor_div)) : editor Js.t)
-let () = editor##setTheme(Js.string "ace/theme/monokai")
-let () = (editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+(* Initialize Elixir editor with Ace *)
+let elixir_editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(elixir_editor_div)) : editor Js.t)
+let () = elixir_editor##setTheme(Js.string "ace/theme/monokai")
+let () = (elixir_editor##getSession)##setMode(Js.string "ace/mode/elixir")
+
+(* Initialize 1ML editor with Ace *)
+let ml_editor = (Js.Unsafe.coerce (Js.Unsafe.global##.ace##edit(editor_div)) : editor Js.t)
+let () = ml_editor##setTheme(Js.string "ace/theme/monokai")
+let () = (ml_editor##getSession)##setMode(Js.string "ace/mode/ocaml")
+let () = ml_editor##setReadOnly(Js._true)
 
 (* Set initial content for the systemf div *)
 let () = systemf_editor_div##.innerHTML := Js.string "<div style=\"color: #aaa; padding: 10px; font-style: italic;\">System F output will appear here when you run code</div>"
@@ -83,6 +94,22 @@ let append_output str =
 let clear_output () =
   output_div##.innerHTML := Js.string ""
 
+(* Variables to track editor state *)
+let ml_editor_readonly = ref true
+
+(* Toggle ML editor read-only state *)
+let toggle_ml_editor_editable () =
+  ml_editor_readonly := not !ml_editor_readonly;
+  ml_editor##setReadOnly(Js.bool !ml_editor_readonly);
+  
+  (* Use DOM methods to set button text *)
+  let button_text = if !ml_editor_readonly then "Edit" else "Lock" in
+  Js.Opt.iter (edit_ml_button##.firstChild)
+    (fun node -> Dom.removeChild edit_ml_button node);
+  Dom.appendChild edit_ml_button
+    (document##createTextNode(Js.string button_text))
+
+(* Example code *)
 let example_code = {|type STACK = {
   type t a;
   empty 'a : t a;
@@ -139,12 +166,55 @@ test = fun () => {
 
   stRev = reverse ListStack st;
 
-  do Text.print "\nReversed stack (top to bottom): ";
-  do printStack stRev;
+  type pair a = (a, t a);
+  pop = fun (n, xs) => 
+    case xs
+      (fun () => None)
+      (fun (h, t) => Some (h, (n-1, t)));
 };
 
-do test ();|}
+Stack = {
+  type STACK = STACK;
+  
+  stack : STACK = ListStack;
 
+  push 'a (x : a) (st : stack.t a) : stack.t a = stack.push x st;
+  
+  pop 'a (st : stack.t a) = stack.pop st;
+};
+
+Stack.push 42 (Stack.push 17 Stack.empty);
+|} 
+
+(* Example Elixir code *)
+let elixir_example_code = {|defmodtype StackT do
+  $param item
+  $opaque s
+  callback new : list(item) -> s
+end
+
+defmodule StackInt do
+  @behaviour StackT
+  $param item = int
+  $type s = list(int)
+  def new (l : list(item)) : s = l
+end
+
+defmodule StackGeneric do
+  $param a
+  @behaviour StackT
+  $param item = a
+  $type s = list(item)
+  def new (l : list(item)) : s = l
+end
+|}
+
+(* New function to translate Elixir to 1ML *)
+let translate_elixir_to_ml elixir_code =
+  (* Use the read_string function from Formal1to2 *)
+  P.Formal1to2.read_string elixir_code
+
+(* Example Stacknew code *)
 let stacknew_example_code = {|type STACK = {
     type container a;
     new 'a : list a -> container a;
@@ -190,9 +260,9 @@ let () = Oneml.Prim.print := append_output
 let env = ref Oneml.Env.empty
 let state = ref Oneml.Lambda.Env.empty
 
-let run_code ?(is_prelude=false) code =
+let run_code ?(is_prelude = false) src =
   try
-    let lexbuf = Lexing.from_string code in
+    let lexbuf = Lexing.from_string src in
     lexbuf.Lexing.lex_curr_p <- {lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = if is_prelude then "prelude" else "web"};
     let prog = Oneml.Parser.prog Oneml.Lexer.token lexbuf in
     let sign, _, fprog = Oneml.Elab.elab !env prog in
@@ -488,55 +558,118 @@ let () =
   if (Js.to_bool (load_prelude_checkbox##.checked)) then
     run_code ~is_prelude:true prelude_source
 
+(* Handle run button *)
 let () =
   run_button##.onclick := Dom_html.handler (fun _ ->
-    let should_load_prelude = Js.to_bool (load_prelude_checkbox##.checked) in
-    if should_load_prelude then (
-      env := Oneml.Env.empty;
-      state := Oneml.Lambda.Env.empty;
-      run_code ~is_prelude:true prelude_source;
-    ) else (
-      env := Oneml.Env.empty;
-      state := Oneml.Lambda.Env.empty;
-    );
-    run_code (Js.to_string (editor##getValue()));
+    clear_output ();
     
-    (* Remove the automatic tab switching code *)
+    (* Get source code from appropriate editor *)
+    let elixir_code = Js.to_string (elixir_editor##getValue()) in
+    
+    (* First translate Elixir to 1ML if there's Elixir code *)
+    let ml_code = 
+      if elixir_code <> "" then begin
+        (* Try to translate Elixir to 1ML *)
+        try
+          let translated = translate_elixir_to_ml elixir_code in
+          ml_editor##setValue(Js.string translated);
+          translated
+        with e ->
+          append_output ("Error translating Elixir: " ^ Printexc.to_string e);
+          ""
+      end else begin
+        (* Directly use 1ML code if no Elixir code or if 1ML was edited directly *)
+        Js.to_string (ml_editor##getValue())
+      end
+    in
+    
+    (* Process 1ML code if available *)
+    if ml_code <> "" then begin
+      try
+        (* Run the 1ML code using existing run_code function *)
+        let should_load_prelude = Js.to_bool (load_prelude_checkbox##.checked) in
+        if should_load_prelude then (
+          env := Oneml.Env.empty;
+          state := Oneml.Lambda.Env.empty;
+          run_code ~is_prelude:true prelude_source;
+        ) else (
+          env := Oneml.Env.empty;
+          state := Oneml.Lambda.Env.empty;
+        );
+        run_code ml_code;
+      with
+      | Oneml.Source.Error (region, msg) ->
+        append_output ("Error at " ^ Oneml.Source.string_of_region region ^ ": " ^ msg)
+      | e ->
+        append_output ("Error: " ^ Printexc.to_string e)
+    end;
     
     Js._false
-  );
+  )
+
+(* Handle clear button *)
+let () =
   clear_button##.onclick := Dom_html.handler (fun _ ->
+    elixir_editor##setValue(Js.string "");
+    ml_editor##setValue(Js.string "");
+    clear_output ();
+    Js._false
+  )
+
+(* Handle examples *)
+let () =
+  load_example_button##.onclick := Dom_html.handler (fun _ ->
+    elixir_editor##setValue(Js.string "");
+    ml_editor##setValue(Js.string example_code);
     clear_output ();
     Js._false
   );
-  load_example_button##.onclick := Dom_html.handler (fun _ ->
-    editor##setValue(Js.string example_code);
-    run_code example_code;
-    Js._false
-  );
   load_stacknew_example_button##.onclick := Dom_html.handler (fun _ ->
-    editor##setValue(Js.string stacknew_example_code);
-    run_code stacknew_example_code;
+    elixir_editor##setValue(Js.string "");
+    ml_editor##setValue(Js.string stacknew_example_code);
+    clear_output ();
     Js._false
   );
+  load_elixir_example_button##.onclick := Dom_html.handler (fun _ ->
+    elixir_editor##setValue(Js.string elixir_example_code);
+    ml_editor##setValue(Js.string "");
+    clear_output ();
+    Js._false
+  )
+
+(* Handle edit_ml button *)
+let () =
+  edit_ml_button##.onclick := Dom_html.handler (fun _ ->
+    toggle_ml_editor_editable ();
+    Js._false
+  )
+
+(* Handle toggle help button *)
+let () =
   toggle_help_button##.onclick := Dom_html.handler (fun _ ->
     let classList = syntax_help_div##.classList in
     ignore (classList##remove(Js.string "hidden"));
     Js._false
-  );
+  )
+
+(* Handle close help button *)
+let () =
   close_help_button##.onclick := Dom_html.handler (fun _ ->
     let classList = syntax_help_div##.classList in
     ignore (classList##add(Js.string "hidden"));
     Js._false
-  );
-  (* Add Ctrl+Enter shortcut *)
-  let _ = Dom_html.addEventListener Dom_html.document 
-    Dom_html.Event.keydown
-    (Dom_html.handler (fun (e : Dom_html.keyboardEvent Js.t) ->
-      if Js.to_bool e##.ctrlKey && e##.keyCode = 13 then begin
-        run_code (Js.to_string (editor##getValue()));
-        Js._false
-      end else
-        Js._true))
-    Js._false in
-  () 
+  )
+
+(* Add Ctrl+Enter shortcut *)
+let _ = Dom_html.addEventListener Dom_html.document 
+  (Dom_html.Event.make "keydown")
+  (Dom_html.handler (fun e ->
+    if e##.ctrlKey = Js._true && e##.keyCode = 13 then begin
+      (* Manually trigger the run button's onclick event instead of using click() *)
+      let onclick_handler = Js.Unsafe.get run_button "onclick" in
+      ignore (Js.Unsafe.fun_call onclick_handler [|Js.Unsafe.inject e|]);
+      Js._false
+    end else
+      Js._true
+  ))
+  Js._true 

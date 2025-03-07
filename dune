@@ -1,6 +1,6 @@
 (executable
  (name web)
- (libraries oneml js_of_ocaml js_of_ocaml-lwt js_of_ocaml-ppx proto_lib)
+ (libraries proto_lib oneml js_of_ocaml js_of_ocaml-lwt js_of_ocaml-ppx)
  (modes js native)
  (preprocess
   (pps js_of_ocaml-ppx))

@@ -15,8 +15,11 @@
                 <h1>1ML Online REPL</h1>
                 <button id="run">Run (Ctrl+Enter)</button>
                 <button id="clear">Clear</button>
-                <button id="load_example">Load Stack Example</button>
-                <button id="load_stacknew_example">Load Stack.new Example</button>
+                <div class="example-buttons">
+                    <button id="load_example">Load Stack Example</button>
+                    <button id="load_stacknew_example">Load Stack.new Example</button>
+                    <button id="load_elixir_example">Load Elixir Example</button>
+                </div>
                 <label class="prelude-toggle">
                     <input type="checkbox" id="load_prelude" checked>
                     Load Prelude
@@ -24,27 +27,44 @@
                 <button id="toggle_help" class="help-button">Show Syntax Help</button>
             </div>
         </header>
-        <main>
-            <div class="editor-container">
-                <div id="editor"></div>
+        <main class="three-panel-layout">
+            <!-- Left panel: Elixir editor -->
+            <div class="editor-panel elixir-panel">
+                <div class="panel-header">
+                    <h2>Elixir Code</h2>
+                </div>
+                <div id="elixir_editor" class="editor-container"></div>
             </div>
-            <div class="output-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" data-tab="program-output">Program Output</button>
-                    <button class="tab-button" data-tab="systemf-term">System F Term</button>
+
+            <!-- Right panel: 1ML editor -->
+            <div class="editor-panel ml-panel">
+                <div class="panel-header">
+                    <h2>1ML Translation</h2>
+                    <button id="edit_ml" class="small-button">Edit</button>
                 </div>
-                <div class="tab-content">
-                    <div class="tab-pane active" id="program-output">
-                        <pre id="output"></pre>
-                    </div>
-                    <div class="tab-pane" id="systemf-term">
-                        <div id="systemf_editor"></div>
-                    </div>
-                </div>
+                <div id="editor" class="editor-container"></div>
             </div>
         </main>
+
+        <!-- Bottom panel: Output and System F -->
+        <div class="bottom-panel">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="program-output">Program Output</button>
+                <button class="tab-button" data-tab="systemf-term">System F Term</button>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane active" id="program-output">
+                    <pre id="output"></pre>
+                </div>
+                <div class="tab-pane" id="systemf-term">
+                    <div id="systemf_editor"></div>
+                </div>
+            </div>
+        </div>
+
         <div id="syntax_help" class="syntax-help hidden">
             <h2>1ML Quick Reference</h2>
+            <button id="close_help" class="close-button">×</button>
             <div class="syntax-sections">
                 <section>
                     <h3>Basic Syntax</h3>
@@ -143,7 +163,6 @@ Set (Elem : ORD) :> SET with (elem = Elem.t) = {
 };</pre>
                 </section>
             </div>
-            <button id="close_help" class="close-button">×</button>
         </div>
     </div>
     <footer class="attribution">
