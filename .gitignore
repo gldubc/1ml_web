@@ -10,6 +10,7 @@ _build/
 *.cmxa
 _opam
 
+
 # Editor files
 .vscode/
 .idea/
@@ -20,3 +21,6 @@ _opam
 .DS_Store
 Thumbs.db
 1ml/1ml
+build/
+*.byte
+docs/js/web.js

@@ -1,0 +1,8 @@
+(executable
+ (name web)
+ (libraries oneml js_of_ocaml js_of_ocaml-lwt js_of_ocaml-ppx proto_lib)
+ (modes js native)
+ (preprocess
+  (pps js_of_ocaml-ppx))
+ (flags
+  (:standard -w -a -warn-error -a)))
