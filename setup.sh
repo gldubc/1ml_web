@@ -10,19 +10,7 @@ fi
 # Create docs directory structure
 mkdir -p docs/{js,css}
 
-# Build everything using the 1ML Makefile
-cd 1ml
-make clean
-make
-cd ..
-
-# Create a simple development server script
-cat > serve.sh << 'EOF'
-#!/bin/bash
-cd docs
-python3 -m http.server 8000
-EOF
-
-chmod +x serve.sh
-
-echo "Setup complete! Run ./serve.sh to start the development server" 
+dune build
+# Ensure target is writable if it exists
+[ -f docs/js/web.js ] && chmod u+w docs/js/web.js
+cp _build/default/web.bc.js docs/js/web.js

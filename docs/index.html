@@ -13,21 +13,10 @@
         <header>
             <div class="toolbar">
                 <h1>1ML Online REPL</h1>
-                <div class="mode-selector">
-                    <label>
-                        <input type="radio" name="mode" id="mode_1ml" checked>
-                        1ML Mode
-                    </label>
-                    <label>
-                        <input type="radio" name="mode" id="mode_elixir">
-                        Elixir Mode
-                    </label>
-                </div>
                 <button id="run">Run (Ctrl+Enter)</button>
                 <button id="clear">Clear</button>
                 <button id="load_example">Load Stack Example</button>
                 <button id="load_stacknew_example">Load Stack.new Example</button>
-                <button id="load_elixir_example">Load Elixir Example</button>
                 <label class="prelude-toggle">
                     <input type="checkbox" id="load_prelude" checked>
                     Load Prelude
@@ -43,7 +32,6 @@
                 <div class="tab-buttons">
                     <button class="tab-button active" data-tab="program-output">Program Output</button>
                     <button class="tab-button" data-tab="systemf-term">System F Term</button>
-                    <button class="tab-button" data-tab="1ml-term">1ML Code</button>
                 </div>
                 <div class="tab-content">
                     <div class="tab-pane active" id="program-output">
@@ -51,9 +39,6 @@
                     </div>
                     <div class="tab-pane" id="systemf-term">
                         <div id="systemf_editor"></div>
-                    </div>
-                    <div class="tab-pane" id="1ml-term">
-                        <div id="1ml_editor"></div>
                     </div>
                 </div>
             </div>

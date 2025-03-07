@@ -6,3 +6,10 @@
   (pps js_of_ocaml-ppx))
  (flags
   (:standard -w -a -warn-error -a)))
+
+; this builds web.js by using js_of_ocaml
+
+; (rule
+;  (deps _build/default/web.bc.js)
+;  (action
+;   (copy _build/default/web.bc.js docs/web.js)))
