@@ -20,43 +20,44 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
-    line-height: 1.6;
+    line-height: 1.4;
 }
 
 .container {
     width: 100%;
-    padding: 1rem;
+    padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
 header {
-    margin-bottom: 1rem;
-    padding: 0 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0 0.5rem;
 }
 
 h1 {
     color: var(--primary-color);
     margin: 0;
-    margin-right: 1.5rem;
-    font-size: 1.5rem;
+    margin-right: 1rem;
+    font-size: 1.3rem;
     display: flex;
     align-items: center;
 }
 
 .toolbar {
     display: flex;
-    gap: 1rem;
+    gap: 0.4rem;
     align-items: center;
     flex-wrap: wrap;
+    padding-bottom: 0.3rem;
 }
 
 button {
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 0.7rem;
     background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: background-color 0.2s;
 }
 
@@ -71,51 +72,109 @@ button:hover {
 .mode-selector {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-right: 1rem;
+    gap: 0.5rem;
+    margin-right: 0.5rem;
     color: var(--primary-color);
 }
 
 .mode-selector label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
     cursor: pointer;
 }
 
 .mode-selector input[type="radio"] {
-    width: 1rem;
-    height: 1rem;
+    width: 0.9rem;
+    height: 0.9rem;
     cursor: pointer;
 }
 
 .prelude-toggle {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-left: 1rem;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
     color: var(--primary-color);
     cursor: pointer;
+    font-size: 0.9rem;
 }
 
 .prelude-toggle input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
+    width: 0.9rem;
+    height: 0.9rem;
     cursor: pointer;
 }
 
 main {
     display: flex;
-    gap: 1rem;
-    height: calc(100vh - 120px);
-    margin-bottom: 40px;
+    gap: 0.5rem;
+    height: calc(100vh - 100px);
+    margin-bottom: 30px;
 }
 
 .editor-container {
-    flex: 1.2;
-    border-radius: 8px;
+    flex: 1;
+    position: relative;
+    height: calc(100% - 28px);
+    width: 100%;
+    border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Bottom panel for output and System F */
+.bottom-panel {
+    height: 27vh;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: var(--panel-header-bg);
+    border-bottom: 1px solid var(--panel-border);
+    height: 28px;
+}
+
+.tab-button {
+    padding: 0.25rem 0.75rem;
+    background: none;
+    color: var(--primary-color);
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tab-button.active {
+    border-bottom: 2px solid var(--secondary-color);
+    font-weight: 500;
+}
+
+.tab-content {
+    flex: 1;
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+    height: calc(100% - 28px);
+    padding: 0;
+}
+
+.tab-pane.active {
+    display: block;
 }
 
 .output-container {
@@ -123,66 +182,27 @@ main {
     display: flex;
     flex-direction: column;
     padding: 0;
-    background-color: #2d2d2d;
+    background-color: var(--output-bg);
     overflow: hidden;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.tab-buttons {
-    display: flex;
-    background-color: #383838;
-    border-bottom: 1px solid #4a4a4a;
-}
-
-.tab-button {
-    padding: 0.5rem 1rem;
-    background: none;
-    color: #e6e6e6;
-    border: none;
-    border-bottom: 2px solid transparent;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tab-button:hover {
-    background-color: #454545;
-}
-
-.tab-button.active {
-    border-bottom-color: var(--secondary-color);
-    background-color: #454545;
-}
-
-.tab-content {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-}
-
-.tab-pane {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-}
-
-.tab-pane.active {
-    display: block;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #output {
+    padding: 0.5rem;
     margin: 0;
-    color: #e6e6e6;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-    font-size: 0.9rem;
-    white-space: pre-wrap;
     height: 100%;
+    width: 100%;
     overflow: auto;
-    padding: 1rem;
+    color: var(--output-text);
+    background-color: var(--output-bg);
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+#systemf_editor {
+    height: 100%;
+    width: 100%;
 }
 
 #systemf_editor,
@@ -303,41 +323,41 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
+    width: 90%;
     max-width: 1200px;
-    max-height: 80vh;
+    max-height: 85vh;
     background: var(--help-bg);
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    padding: 2rem;
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
     z-index: 1000;
     overflow-y: auto;
 }
 
 .syntax-help h2 {
     color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
 }
 
 .syntax-help h3 {
     color: var(--primary-color);
-    margin: 1rem 0;
-    font-size: 1.2rem;
+    margin: 0.5rem 0;
+    font-size: 1rem;
 }
 
 .syntax-sections {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
 }
 
 .syntax-help pre {
     background: #2d2d2d;
     border-radius: 4px;
-    padding: 1rem;
+    padding: 0.75rem;
     font-family: 'Fira Code', 'Consolas', monospace;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     overflow-x: auto;
     white-space: pre-wrap;
     color: #d4d4d4;
@@ -410,11 +430,11 @@ main {
     left: 0;
     width: 100%;
     background: var(--help-bg);
-    padding: 0.5rem;
+    padding: 0.25rem;
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     border-top: 1px solid var(--help-border);
-    height: 40px;
+    height: 30px;
     z-index: 100;
 }
 
@@ -430,9 +450,9 @@ main {
 /* Three-panel layout */
 .three-panel-layout {
     display: flex;
-    gap: 1rem;
-    height: 60vh;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    height: 68vh;
+    margin-bottom: 0.5rem;
 }
 
 .editor-panel {
@@ -442,108 +462,42 @@ main {
     border: 1px solid var(--panel-border);
     border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 1rem;
+    padding: 0.2rem 0.4rem;
     background-color: var(--panel-header-bg);
     border-bottom: 1px solid var(--panel-border);
+    height: 28px;
 }
 
 .panel-header h2 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin: 0;
     color: var(--primary-color);
 }
 
 .small-button {
-    padding: 0.3rem 0.6rem;
+    padding: 0.2rem 0.4rem;
     font-size: 0.8rem;
-}
-
-.editor-container {
-    flex: 1;
-    position: relative;
-    height: 100%;
-    width: 100%;
-}
-
-/* Bottom panel for output and System F */
-.bottom-panel {
-    height: 30vh;
-    border: 1px solid var(--panel-border);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.tab-buttons {
-    display: flex;
-    background-color: var(--panel-header-bg);
-    border-bottom: 1px solid var(--panel-border);
-}
-
-.tab-button {
-    background: none;
-    color: var(--primary-color);
-    padding: 0.5rem 1rem;
-    border: none;
-    border-bottom: 2px solid transparent;
-}
-
-.tab-button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.tab-button.active {
-    border-bottom: 2px solid var(--secondary-color);
-    font-weight: 500;
-}
-
-.tab-content {
-    flex: 1;
-    position: relative;
-}
-
-.tab-pane {
-    display: none;
-    height: 100%;
-    padding: 0;
-}
-
-.tab-pane.active {
-    display: block;
-}
-
-#output {
-    padding: 1rem;
-    margin: 0;
-    height: 100%;
-    width: 100%;
-    overflow: auto;
-    color: var(--output-text);
-    background-color: var(--output-bg);
-    font-family: monospace;
-}
-
-#systemf_editor {
-    height: 100%;
-    width: 100%;
 }
 
 .example-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.3rem;
+    flex-wrap: wrap;
 }
 
-/* Make the help appear on top of the three-panel layout */
-.syntax-help {
-    z-index: 1000;
+.example-buttons button {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+button#run,
+button#clear {
+    font-weight: 500;
 }

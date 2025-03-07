@@ -1,0 +1,5 @@
+; (rule
+;  (target web.js)
+;  (deps %{workspace_root}/_build/default/web.bc.js)
+;  (action
+;   (copy %{workspace_root}/_build/default/web.bc.js %{target})))
